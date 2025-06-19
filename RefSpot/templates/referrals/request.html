@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Request Referral{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i data-feather="users" style="width: 20px; height: 20px;" class="me-2"></i>
+                        Request Referral
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Request a referral from your network for a specific role or company. This will be visible to all your connections who are open for referrals.
+                    </p>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.target_company.label(class="form-label") }}
+                            {{ form.target_company(class="form-control", placeholder="e.g. Google, Microsoft, Apple...") }}
+                            {% if form.target_company.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.target_company.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.target_role.label(class="form-label") }}
+                            {{ form.target_role(class="form-control", placeholder="e.g. Software Engineer, Product Manager, Data Scientist...") }}
+                            {% if form.target_role.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.target_role.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form.message.label(class="form-label") }}
+                            {{ form.message(class="form-control", rows="4", placeholder="Tell your network why you're interested in this role and what makes you a good fit...") }}
+                            <small class="form-text text-muted">Optional: Explain why you want this role or what attracts you to this company.</small>
+                            {% if form.message.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.message.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('referrals') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}

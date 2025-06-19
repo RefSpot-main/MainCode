@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Messages - Refspot{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i data-feather="message-circle" class="me-2"></i>
+                Messages
+            </h2>
+            <a href="{{ url_for('connections') }}" class="btn btn-outline-primary">
+                <i data-feather="users" class="me-1"></i>
+                View Connections
+            </a>
+        </div>
+        
+        {% if conversations %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Conversations</h5>
+                    <p class="text-muted mb-0">Click on a conversation to view and reply</p>
+                </div>
+                <div class="card-body p-0">
+                    {% for conversation in conversations %}
+                        <div class="message-item {% if conversation.unread_count > 0 %}message-unread{% endif %}">
+                            <a href="{{ url_for('conversation', username=conversation.user.username) }}" class="text-decoration-none d-block">
+                                <div class="d-flex align-items-center">
+                                    {% if conversation.user.profile_image %}
+                                        <img src="{{ url_for('static', filename='uploads/profile_photos/' + conversation.user.profile_image) }}" 
+                                             alt="Profile" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                    {% else %}
+                                        <div class="profile-avatar me-3" style="width: 50px; height: 50px; font-size: 1.1rem;">
+                                            {{ conversation.user.get_full_name()[0]|upper }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="flex-grow-1">
+                                        <div class="message-header">
+                                            <div class="message-sender">
+                                                {{ conversation.user.get_full_name() }}
+                                                {% if conversation.unread_count > 0 %}
+                                                    <span class="badge bg-primary ms-2">{{ conversation.unread_count }}</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="message-time">
+                                                {{ conversation.last_message.created_at.strftime('%b %d, %I:%M %p') }}
+                                            </div>
+                                        </div>
+                                        {% if conversation.user.headline %}
+                                            <div class="small text-muted mb-1">{{ conversation.user.headline[:60] }}{% if conversation.user.headline|length > 60 %}...{% endif %}</div>
+                                        {% endif %}
+                                        <div class="message-content">
+                                            {% if conversation.last_message.sender_id == current_user.id %}
+                                                <span class="text-muted">You: </span>
+                                            {% endif %}
+                                            {{ conversation.last_message.content[:100] }}{% if conversation.last_message.content|length > 100 %}...{% endif %}
+                                        </div>
+                                    </div>
+                                    <div class="ms-3">
+                                        <i data-feather="chevron-right" class="text-muted"></i>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i data-feather="message-circle" style="width: 64px; height: 64px;" class="text-muted"></i>
+                </div>
+                <h4 class="text-muted">No Messages Yet</h4>
+                <p class="text-muted mb-4">Start a conversation with your connections to exchange ideas and opportunities.</p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('connections') }}" class="btn btn-primary">
+                        <i data-feather="users" class="me-1"></i>
+                        View Connections
+                    </a>
+                    <a href="{{ url_for('search') }}" class="btn btn-outline-primary">
+                        <i data-feather="search" class="me-1"></i>
+                        Find People
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if conversations %}
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="info" class="me-2"></i>
+                    Messaging Guidelines
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Professional Communication</h6>
+                        <ul class="small text-muted">
+                            <li>Keep conversations professional and respectful</li>
+                            <li>Be clear and concise in your messages</li>
+                            <li>Respond promptly to maintain good relationships</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Privacy & Security</h6>
+                        <ul class="small text-muted">
+                            <li>Only connected users can message each other</li>
+                            <li>All messages are private and secure</li>
+                            <li>Report any inappropriate behavior</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

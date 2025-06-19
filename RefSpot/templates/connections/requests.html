@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}Connection Requests - Refspot{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>Connection Requests</h2>
+            <a href="{{ url_for('connections') }}" class="btn btn-outline-primary">
+                <i data-feather="users" class="me-1"></i>
+                View Connections
+            </a>
+        </div>
+        
+        <!-- Incoming Connection Requests -->
+        {% if incoming_requests %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="user-plus" class="me-2"></i>
+                        Incoming Requests ({{ incoming_requests|length }})
+                    </h5>
+                    <p class="text-muted mb-0">People who want to connect with you</p>
+                </div>
+                <div class="card-body">
+                    {% for connection, sender in incoming_requests %}
+                        <div class="d-flex align-items-center justify-content-between p-3 border rounded mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="profile-avatar me-3" style="width: 60px; height: 60px; font-size: 1.2rem;">
+                                    {{ sender.get_full_name()[0]|upper }}
+                                </div>
+                                <div>
+                                    <h6 class="mb-1">
+                                        <a href="{{ url_for('view_profile', username=sender.username) }}" class="text-decoration-none">
+                                            {{ sender.get_full_name() }}
+                                        </a>
+                                    </h6>
+                                    {% if sender.headline %}
+                                        <p class="text-muted mb-1">{{ sender.headline }}</p>
+                                    {% endif %}
+                                    {% if sender.current_company %}
+                                        <p class="small text-muted mb-1">
+                                            <i data-feather="briefcase" class="me-1" style="width: 14px; height: 14px;"></i>
+                                            {{ sender.current_company }}
+                                        </p>
+                                    {% endif %}
+                                    {% if connection.message %}
+                                        <div class="small text-muted mt-2">
+                                            <strong>Message:</strong> "{{ connection.message }}"
+                                        </div>
+                                    {% endif %}
+                                    <small class="text-muted">{{ connection.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <form method="POST" action="{{ url_for('accept_connection', request_id=connection.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i data-feather="check" class="me-1"></i>
+                                        Accept
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ url_for('decline_connection', request_id=connection.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                        <i data-feather="x" class="me-1"></i>
+                                        Decline
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Outgoing Connection Requests -->
+        {% if outgoing_requests %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="send" class="me-2"></i>
+                        Sent Requests ({{ outgoing_requests|length }})
+                    </h5>
+                    <p class="text-muted mb-0">Requests you've sent that are pending</p>
+                </div>
+                <div class="card-body">
+                    {% for connection, receiver in outgoing_requests %}
+                        <div class="d-flex align-items-center p-3 border rounded mb-3">
+                            <div class="profile-avatar me-3" style="width: 60px; height: 60px; font-size: 1.2rem;">
+                                {{ receiver.get_full_name()[0]|upper }}
+                            </div>
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">
+                                    <a href="{{ url_for('view_profile', username=receiver.username) }}" class="text-decoration-none">
+                                        {{ receiver.get_full_name() }}
+                                    </a>
+                                </h6>
+                                {% if receiver.headline %}
+                                    <p class="text-muted mb-1">{{ receiver.headline }}</p>
+                                {% endif %}
+                                {% if receiver.current_company %}
+                                    <p class="small text-muted mb-1">
+                                        <i data-feather="briefcase" class="me-1" style="width: 14px; height: 14px;"></i>
+                                        {{ receiver.current_company }}
+                                    </p>
+                                {% endif %}
+                                {% if connection.message %}
+                                    <div class="small text-muted mt-2">
+                                        <strong>Your message:</strong> "{{ connection.message }}"
+                                    </div>
+                                {% endif %}
+                                <small class="text-muted">Sent {{ connection.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                            </div>
+                            <div class="d-flex gap-2 align-items-center">
+                                <span class="badge bg-warning">
+                                    <i data-feather="clock" class="me-1" style="width: 12px; height: 12px;"></i>
+                                    Pending
+                                </span>
+                                <form method="POST" action="{{ url_for('cancel_connection_request', request_id=connection.id) }}" class="d-inline" 
+                                      onsubmit="return confirm('Are you sure you want to cancel this connection request?')">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i data-feather="x" class="me-1"></i>
+                                        Cancel
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Empty State -->
+        {% if not incoming_requests and not outgoing_requests %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i data-feather="user-plus" style="width: 64px; height: 64px;" class="text-muted"></i>
+                </div>
+                <h4 class="text-muted">No Connection Requests</h4>
+                <p class="text-muted mb-4">You don't have any pending connection requests at the moment.</p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">
+                        <i data-feather="search" class="me-1"></i>
+                        Find People to Connect
+                    </a>
+                    <a href="{{ url_for('connections') }}" class="btn btn-outline-primary">
+                        <i data-feather="users" class="me-1"></i>
+                        View Your Connections
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

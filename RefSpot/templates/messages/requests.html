@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Message Requests{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i data-feather="mail" class="me-2"></i>
+                    Message Requests
+                </h2>
+                <a href="{{ url_for('messages') }}" class="btn btn-outline-primary">
+                    <i data-feather="message-circle" class="me-1"></i>
+                    View Messages
+                </a>
+            </div>
+
+            {% if pending_requests %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="inbox" class="me-2"></i>
+                            Pending Message Requests ({{ pending_requests|length }})
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for message in pending_requests %}
+                        <div class="message-request border-bottom pb-3 mb-3">
+                            <div class="d-flex align-items-start">
+                                <div class="profile-avatar me-3" style="width: 50px; height: 50px; font-size: 1rem;">
+                                    {{ message.sender.get_full_name()[0]|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <div>
+                                            <strong>
+                                                <a href="{{ url_for('view_profile', username=message.sender.username) }}" 
+                                                   class="text-decoration-none">
+                                                    {{ message.sender.get_full_name() }}
+                                                </a>
+                                            </strong>
+                                            {% if message.sender.headline %}
+                                                <p class="text-muted mb-1 small">{{ message.sender.headline }}</p>
+                                            {% endif %}
+                                            {% if message.sender.current_company %}
+                                                <p class="text-muted mb-0 small">{{ message.sender.current_company }}</p>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">{{ message.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                    </div>
+                                    
+                                    <div class="message-preview p-3 bg-light rounded mb-3">
+                                        <p class="mb-0">{{ message.content }}</p>
+                                    </div>
+                                    
+                                    <div class="d-flex gap-2">
+                                        <form method="POST" action="{{ url_for('approve_message_request', message_id=message.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-success btn-sm">
+                                                <i data-feather="check" class="me-1"></i>
+                                                Accept & Reply
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('decline_message_request', message_id=message.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-outline-secondary btn-sm">
+                                                <i data-feather="x" class="me-1"></i>
+                                                Decline
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i data-feather="mail" style="width: 64px; height: 64px;" class="text-muted"></i>
+                    </div>
+                    <h4 class="text-muted">No Message Requests</h4>
+                    <p class="text-muted mb-4">You don't have any pending message requests at the moment.</p>
+                    <a href="{{ url_for('messages') }}" class="btn btn-primary">
+                        <i data-feather="message-circle" class="me-1"></i>
+                        View Your Messages
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Request Referral from {{ user.get_full_name() }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i data-feather="help-circle" class="me-2"></i>
+                        Request Referral from {{ user.get_full_name() }}
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    <div class="alert alert-info d-flex align-items-start">
+                        <i data-feather="info" class="me-2 mt-1" style="width: 18px; height: 18px;"></i>
+                        <div>
+                            <strong>How it works:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Your referral request will be posted publicly in the Referrals section</li>
+                                <li>{{ user.get_full_name() }} will receive a message notification about your request</li>
+                                <li>If they work at the company or have connections there, they can help you</li>
+                                <li>Your request expires in 30 days</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.target_company.label(class="form-label") }}
+                            {{ form.target_company(class="form-control") }}
+                            {% if form.target_company.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.target_company.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.target_role.label(class="form-label") }}
+                            {{ form.target_role(class="form-control") }}
+                            {% if form.target_role.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.target_role.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.message.label(class="form-label") }}
+                            {{ form.message(class="form-control", rows="4", placeholder="Tell them why you're interested in this role and company...") }}
+                            {% if form.message.errors %}
+                                <div class="text-danger small mt-1">
+                                    {% for error in form.message.errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">This will help {{ user.get_full_name() }} understand your motivation and provide better assistance.</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('view_profile', username=user.username) }}" class="btn btn-outline-secondary">
+                                <i data-feather="arrow-left" class="me-1"></i>
+                                Back to Profile
+                            </a>
+                            
+                            <button type="submit" class="btn btn-primary">
+                                <i data-feather="send" class="me-1"></i>
+                                Send Request
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- User Info Card -->
+            <div class="card mt-4 shadow-sm">
+                <div class="card-body">
+                    <h6 class="card-title">About {{ user.get_full_name() }}</h6>
+                    <div class="d-flex align-items-center">
+                        {% if user.profile_image %}
+                            <img src="{{ url_for('static', filename='uploads/profiles/' + user.profile_image) }}" 
+                                 alt="{{ user.get_full_name() }}" 
+                                 class="rounded-circle me-3" 
+                                 style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                 style="width: 50px; height: 50px;">
+                                <span class="text-white fw-bold">{{ user.get_full_name()[:1] }}</span>
+                            </div>
+                        {% endif %}
+                        
+                        <div>
+                            <div class="fw-bold">{{ user.get_full_name() }}</div>
+                            {% if user.headline %}
+                                <div class="text-muted small">{{ user.headline }}</div>
+                            {% endif %}
+                            {% if user.current_company %}
+                                <div class="text-muted small">
+                                    <i data-feather="briefcase" style="width: 14px; height: 14px;"></i>
+                                    {{ user.current_company }}
+                                    {% if user.current_position %}
+                                        - {{ user.current_position }}
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            {% if user.location %}
+                                <div class="text-muted small">
+                                    <i data-feather="map-pin" style="width: 14px; height: 14px;"></i>
+                                    {{ user.location }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

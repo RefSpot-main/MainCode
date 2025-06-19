@@ -1,0 +1,382 @@
+{% extends "base.html" %}
+
+{% block title %}Search - Refspot{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i data-feather="search" class="me-2"></i>
+                Search Network
+            </h2>
+        </div>
+        
+        <!-- Search Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-8">
+                        <input type="text" class="form-control form-control-lg" name="query" 
+                               placeholder="Search for people, skills, companies, or job titles..." 
+                               value="{{ query }}" required>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-control form-control-lg" name="search_type">
+                            <option value="people" {% if request.args.get('search_type') == 'people' %}selected{% endif %}>People</option>
+                            <option value="jobs" {% if request.args.get('search_type') == 'jobs' %}selected{% endif %}>Jobs</option>
+                            <option value="all" {% if request.args.get('search_type') == 'all' %}selected{% endif %}>Everything</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i data-feather="search" class="me-1"></i>
+                            Search
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Search Results -->
+        {% if query %}
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        Search Results for "{{ query }}"
+                        {% if results %}
+                            <span class="text-muted">({{ results|length }} result{{ 's' if results|length != 1 else '' }})</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if results %}
+                        {% for result in results %}
+                            <div class="search-result">
+                                <div class="search-result-type">{{ result.type|title }}</div>
+                                
+                                {% if result.type == 'person' %}
+                                    <!-- Person Result -->
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <div class="profile-avatar me-3" style="width: 60px; height: 60px; font-size: 1.2rem;">
+                                                {{ result.data.get_full_name()[0]|upper }}
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1">
+                                                    <a href="{{ url_for('view_profile', username=result.data.username) }}" class="text-decoration-none">
+                                                        {{ result.data.get_full_name() }}
+                                                    </a>
+                                                </h6>
+                                                {% if result.data.headline %}
+                                                    <p class="text-muted mb-1">{{ result.data.headline }}</p>
+                                                {% endif %}
+                                                <div class="small text-muted">
+                                                    {% if result.data.current_company and result.data.current_position %}
+                                                        <i data-feather="briefcase" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        {{ result.data.current_position }} at {{ result.data.current_company }}
+                                                    {% elif result.data.current_company %}
+                                                        <i data-feather="briefcase" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        {{ result.data.current_company }}
+                                                    {% endif %}
+                                                    {% if result.data.location %}
+                                                        <span class="ms-3">
+                                                            <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                            {{ result.data.location }}
+                                                        </span>
+                                                    {% endif %}
+                                                </div>
+                                                {% if result.data.job_status %}
+                                                    <div class="mt-2">
+                                                        <span class="status-indicator status-{{ result.data.job_status }}">
+                                                            {% if result.data.job_status == 'seeking' %}
+                                                                <i data-feather="search" style="width: 12px; height: 12px;"></i>
+                                                                Actively Seeking
+                                                            {% elif result.data.job_status == 'open' %}
+                                                                <i data-feather="eye" style="width: 12px; height: 12px;"></i>
+                                                                Open to Opportunities
+                                                            {% else %}
+                                                                <i data-feather="briefcase" style="width: 12px; height: 12px;"></i>
+                                                                Employed
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('view_profile', username=result.data.username) }}" class="btn btn-sm btn-outline-primary">
+                                                <i data-feather="eye" class="me-1"></i>
+                                                View Profile
+                                            </a>
+                                            {% if not current_user.is_connected_to(result.data) and not current_user.has_pending_connection_with(result.data) and result.data.id != current_user.id %}
+                                                <a href="{{ url_for('send_connection_request', username=result.data.username) }}" class="btn btn-sm btn-primary">
+                                                    <i data-feather="user-plus" class="me-1"></i>
+                                                    Connect
+                                                </a>
+                                            {% elif current_user.is_connected_to(result.data) %}
+                                                <span class="btn btn-sm btn-success" disabled>
+                                                    <i data-feather="check" class="me-1"></i>
+                                                    Connected
+                                                </span>
+                                            {% elif current_user.has_pending_connection_with(result.data) %}
+                                                <span class="btn btn-sm btn-secondary" disabled>
+                                                    <i data-feather="clock" class="me-1"></i>
+                                                    Pending
+                                                </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Show skills if available -->
+                                    {% if result.data.skills.count() > 0 %}
+                                        <div class="mt-3">
+                                            <div class="skills-list">
+                                                {% for skill in result.data.skills[:5] %}
+                                                    <span class="skill-tag">{{ skill.skill_name }}</span>
+                                                {% endfor %}
+                                                {% if result.data.skills.count() > 5 %}
+                                                    <span class="text-muted small">+{{ result.data.skills.count() - 5 }} more</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                    
+                                {% elif result.type == 'job' %}
+                                    <!-- Job Result -->
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">{{ result.data.title }}</h6>
+                                            <p class="text-primary mb-1">{{ result.data.company }}</p>
+                                            <div class="job-meta mb-2">
+                                                {% if result.data.location %}
+                                                    <span>
+                                                        <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        {{ result.data.location }}
+                                                    </span>
+                                                {% endif %}
+                                                <span>
+                                                    <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                    {{ result.data.employment_type|title }}
+                                                </span>
+                                                {% if result.data.salary_range %}
+                                                    <span>
+                                                        <i data-feather="dollar-sign" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        {{ result.data.salary_range }}
+                                                    </span>
+                                                {% endif %}
+                                                <span>
+                                                    <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                    Posted {{ result.data.created_at.strftime('%B %d, %Y') }}
+                                                </span>
+                                            </div>
+                                            <p class="text-muted mb-0">
+                                                {{ result.data.description[:200] }}{% if result.data.description|length > 200 %}...{% endif %}
+                                            </p>
+                                            {% if result.data.posted_by %}
+                                                <div class="mt-2">
+                                                    <small class="text-muted">
+                                                        Posted by 
+                                                        <a href="{{ url_for('view_profile', username=result.data.posted_by.username) }}" class="text-decoration-none">
+                                                            {{ result.data.posted_by.get_full_name() }}
+                                                        </a>
+                                                    </small>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ms-4">
+                                            <button type="button" class="btn btn-sm btn-primary" 
+                                                    data-bs-toggle="modal" 
+                                                    data-bs-target="#jobModal{{ result.data.id }}">
+                                                <i data-feather="eye" class="me-1"></i>
+                                                View Details
+                                            </button>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i data-feather="search" style="width: 48px; height: 48px;" class="text-muted mb-3"></i>
+                            <h6 class="text-muted">No Results Found</h6>
+                            <p class="text-muted">Try adjusting your search terms or search in a different category.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <!-- Search Suggestions -->
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i data-feather="compass" class="me-2"></i>
+                                Discover Your Network
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-primary">Search for People</h6>
+                                    <ul class="small text-muted">
+                                        <li>Names or usernames</li>
+                                        <li>Job titles or roles</li>
+                                        <li>Company names</li>
+                                        <li>Skills and expertise</li>
+                                        <li>Location or city</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <h6 class="text-primary">Search for Jobs</h6>
+                                    <ul class="small text-muted">
+                                        <li>Job titles and positions</li>
+                                        <li>Company names</li>
+                                        <li>Industry keywords</li>
+                                        <li>Skills and technologies</li>
+                                        <li>Location preferences</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i data-feather="trending-up" class="me-2"></i>
+                                Popular Searches
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex flex-wrap gap-2">
+                                <a href="?query=software engineer&search_type=people" class="btn btn-sm btn-outline-primary">Software Engineer</a>
+                                <a href="?query=product manager&search_type=people" class="btn btn-sm btn-outline-primary">Product Manager</a>
+                                <a href="?query=designer&search_type=people" class="btn btn-sm btn-outline-primary">Designer</a>
+                                <a href="?query=marketing&search_type=people" class="btn btn-sm btn-outline-primary">Marketing</a>
+                                <a href="?query=remote&search_type=jobs" class="btn btn-sm btn-outline-secondary">Remote Jobs</a>
+                                <a href="?query=python&search_type=people" class="btn btn-sm btn-outline-secondary">Python</a>
+                                <a href="?query=data scientist&search_type=people" class="btn btn-sm btn-outline-primary">Data Scientist</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i data-feather="users" class="me-2"></i>
+                                Quick Actions
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('connections') }}" class="btn btn-outline-primary">
+                                    <i data-feather="users" class="me-1"></i>
+                                    View Connections
+                                </a>
+                                <a href="{{ url_for('connection_requests') }}" class="btn btn-outline-primary">
+                                    <i data-feather="user-plus" class="me-1"></i>
+                                    Connection Requests
+                                </a>
+                                <a href="{{ url_for('jobs') }}" class="btn btn-outline-primary">
+                                    <i data-feather="briefcase" class="me-1"></i>
+                                    Browse All Jobs
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Job Detail Modals for Job Results -->
+{% if results %}
+    {% for result in results %}
+        {% if result.type == 'job' %}
+            <div class="modal fade" id="jobModal{{ result.data.id }}" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">{{ result.data.title }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <h6 class="text-primary">{{ result.data.company }}</h6>
+                                <div class="job-meta">
+                                    {% if result.data.location %}
+                                        <span>
+                                            <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                            {{ result.data.location }}
+                                        </span>
+                                    {% endif %}
+                                    <span>
+                                        <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                        {{ result.data.employment_type|title }}
+                                    </span>
+                                    {% if result.data.salary_range %}
+                                        <span>
+                                            <i data-feather="dollar-sign" class="me-1" style="width: 14px; height: 14px;"></i>
+                                            {{ result.data.salary_range }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6>Job Description</h6>
+                                <p>{{ result.data.description|nl2br }}</p>
+                            </div>
+                            
+                            {% if result.data.requirements %}
+                                <div class="mb-3">
+                                    <h6>Requirements</h6>
+                                    <p>{{ result.data.requirements|nl2br }}</p>
+                                </div>
+                            {% endif %}
+                            
+                            {% if result.data.posted_by %}
+                                <div class="alert alert-info">
+                                    <div class="d-flex align-items-center">
+                                        <div class="profile-avatar me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                                            {{ result.data.posted_by.get_full_name()[0]|upper }}
+                                        </div>
+                                        <div>
+                                            <strong>Posted by {{ result.data.posted_by.get_full_name() }}</strong><br>
+                                            <small class="text-muted">
+                                                {{ result.data.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                                {% if current_user.is_connected_to(result.data.posted_by) %}
+                                                    • You're connected
+                                                {% endif %}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer">
+                            {% if result.data.posted_by and current_user.is_connected_to(result.data.posted_by) %}
+                                <a href="{{ url_for('conversation', username=result.data.posted_by.username) }}" class="btn btn-primary">
+                                    <i data-feather="message-circle" class="me-1"></i>
+                                    Contact Poster
+                                </a>
+                            {% elif result.data.posted_by and not current_user.is_connected_to(result.data.posted_by) %}
+                                <a href="{{ url_for('send_connection_request', username=result.data.posted_by.username) }}" class="btn btn-outline-primary">
+                                    <i data-feather="user-plus" class="me-1"></i>
+                                    Connect First
+                                </a>
+                            {% endif %}
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+{% endif %}
+{% endblock %}

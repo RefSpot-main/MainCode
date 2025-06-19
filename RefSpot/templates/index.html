@@ -1,0 +1,369 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Refspot{% endblock %}
+
+{% block content %}
+{% if current_user.is_authenticated %}
+    <!-- Dashboard for authenticated users -->
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Welcome Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h2 class="card-title">
+                        Welcome back, {{ current_user.get_full_name() }}!
+                    </h2>
+                    <p class="card-text text-muted">
+                        Stay connected with your professional network and discover new opportunities.
+                    </p>
+                    
+                    {% if current_user.job_status %}
+                        <div class="mb-3">
+                            <span class="status-indicator status-{{ current_user.job_status }}">
+                                {% if current_user.job_status == 'employed' %}
+                                    <i data-feather="briefcase"></i>
+                                    Currently Employed
+                                {% elif current_user.job_status == 'seeking' %}
+                                    <i data-feather="search"></i>
+                                    Actively Seeking
+                                {% else %}
+                                    <i data-feather="eye"></i>
+                                    Open to Opportunities
+                                {% endif %}
+                            </span>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('view_profile', username=current_user.username) }}" class="btn btn-primary">
+                            <i data-feather="user" class="me-1"></i>
+                            View Profile
+                        </a>
+                        <a href="{{ url_for('search') }}" class="btn btn-outline-primary">
+                            <i data-feather="search" class="me-1"></i>
+                            Find Connections
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Recommendations -->
+            {% if recent_recommendations %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i data-feather="award" class="me-2"></i>
+                            Recent Recommendations
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        {% for recommendation in recent_recommendations %}
+                            <div class="recommendation-item mb-3">
+                                <div class="recommendation-header">
+                                    <div class="recommendation-author">
+                                        <div class="recommendation-author-name">
+                                            {{ recommendation.recommender.get_full_name() }}
+                                        </div>
+                                        <div class="recommendation-relationship">
+                                            {{ recommendation.relationship|title }} • {{ recommendation.created_at.strftime('%B %d, %Y') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="recommendation-content">
+                                    {{ recommendation.content[:200] }}{% if recommendation.content|length > 200 %}...{% endif %}
+                                </div>
+                                {% if recommendation.get_skills_list() %}
+                                    <div class="recommendation-skills">
+                                        {% for skill in recommendation.get_skills_list()[:3] %}
+                                            <span class="recommendation-skill">{{ skill }}</span>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                        
+                        <a href="{{ url_for('recommendations') }}" class="btn btn-sm btn-outline-primary">
+                            View All Recommendations
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="zap" class="me-2"></i>
+                        Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary w-100">
+                                <i data-feather="edit" class="me-2"></i>
+                                Update Profile
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('search') }}" class="btn btn-outline-primary w-100">
+                                <i data-feather="search" class="me-2"></i>
+                                Find People
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('jobs') }}" class="btn btn-outline-primary w-100">
+                                <i data-feather="briefcase" class="me-2"></i>
+                                Browse Jobs
+                            </a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <a href="{{ url_for('messages') }}" class="btn btn-outline-primary w-100">
+                                <i data-feather="message-circle" class="me-2"></i>
+                                Messages
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Activity Summary -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i data-feather="activity" class="me-2"></i>
+                        Your Activity
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Connections</span>
+                        <span class="fw-bold">{{ recent_connections|length }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Unread Messages</span>
+                        <span class="fw-bold">{{ unread_messages }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="text-muted">Pending Requests</span>
+                        <span class="fw-bold">{{ pending_requests }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted">Job Referrals</span>
+                        <span class="fw-bold">{{ recent_referrals|length }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Recent Connections -->
+            {% if recent_connections %}
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">
+                            <i data-feather="users" class="me-2"></i>
+                            Recent Connections
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% for connection in recent_connections %}
+                            {% set other_user = connection.receiver if connection.sender_id == current_user.id else connection.sender %}
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="profile-avatar me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                                    {{ other_user.get_full_name()[0]|upper }}
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">
+                                        <a href="{{ url_for('view_profile', username=other_user.username) }}" class="text-decoration-none">
+                                            {{ other_user.get_full_name() }}
+                                        </a>
+                                    </div>
+                                    {% if other_user.headline %}
+                                        <div class="text-muted small">{{ other_user.headline[:50] }}...</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        
+                        <a href="{{ url_for('connections') }}" class="btn btn-sm btn-outline-primary w-100">
+                            View All Connections
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+            
+            <!-- Profile Completion -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i data-feather="check-circle" class="me-2"></i>
+                        Profile Completion
+                    </h6>
+                </div>
+                <div class="card-body">
+                    {% set completion_score = 0 %}
+                    {% if current_user.first_name %}{% set completion_score = completion_score + 15 %}{% endif %}
+                    {% if current_user.last_name %}{% set completion_score = completion_score + 15 %}{% endif %}
+                    {% if current_user.headline %}{% set completion_score = completion_score + 20 %}{% endif %}
+                    {% if current_user.about %}{% set completion_score = completion_score + 20 %}{% endif %}
+                    {% if current_user.current_company %}{% set completion_score = completion_score + 15 %}{% endif %}
+                    {% if current_user.skills.count() > 0 %}{% set completion_score = completion_score + 15 %}{% endif %}
+                    
+                    <div class="progress mb-3" style="height: 8px;">
+                        <div class="progress-bar bg-primary" style="width: {{ completion_score }}%"></div>
+                    </div>
+                    
+                    <p class="text-muted mb-3">{{ completion_score }}% Complete</p>
+                    
+                    <div class="small">
+                        {% if not current_user.first_name or not current_user.last_name %}
+                            <div class="mb-2">
+                                <i data-feather="circle" class="me-2" style="width: 12px; height: 12px;"></i>
+                                Add your full name
+                            </div>
+                        {% endif %}
+                        {% if not current_user.headline %}
+                            <div class="mb-2">
+                                <i data-feather="circle" class="me-2" style="width: 12px; height: 12px;"></i>
+                                Add a professional headline
+                            </div>
+                        {% endif %}
+                        {% if not current_user.about %}
+                            <div class="mb-2">
+                                <i data-feather="circle" class="me-2" style="width: 12px; height: 12px;"></i>
+                                Write an about section
+                            </div>
+                        {% endif %}
+                        {% if current_user.skills.count() == 0 %}
+                            <div class="mb-2">
+                                <i data-feather="circle" class="me-2" style="width: 12px; height: 12px;"></i>
+                                Add your skills
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    {% if completion_score < 100 %}
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-sm btn-primary w-100 mt-3">
+                            Complete Profile
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% else %}
+    <!-- Landing page for non-authenticated users -->
+    <div class="text-center">
+        <div class="hero-section py-5">
+            <h1 class="display-4 fw-bold mb-4 fade-in-up" style="color: #404658;">
+                Professional Networking, Redefined
+            </h1>
+            <p class="lead text-muted mb-5">
+                Focus on meaningful career connections and recommendations without the social media distractions.
+                Build your professional network with purpose.
+            </p>
+            
+            <div class="row justify-content-center mb-5">
+                <div class="col-md-8">
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i data-feather="users" class="text-primary mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5>Connect Professionally</h5>
+                                    <p class="text-muted">Build meaningful connections with professionals in your industry.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i data-feather="award" class="text-primary mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5>Get Recommended</h5>
+                                    <p class="text-muted">Receive and give detailed professional endorsements that matter.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                            <div class="card h-100 border-0 shadow-sm">
+                                <div class="card-body text-center">
+                                    <i data-feather="briefcase" class="text-primary mb-3" style="width: 48px; height: 48px;"></i>
+                                    <h5>Find Opportunities</h5>
+                                    <p class="text-muted">Discover jobs matched to your skills and recommendations.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="{{ url_for('register') }}" class="btn btn-primary btn-lg mb-2">
+                    <i data-feather="user-plus" class="me-2"></i>
+                    Get Started
+                </a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-lg mb-2">
+                    <i data-feather="log-in" class="me-2"></i>
+                    Sign In
+                </a>
+            </div>
+        </div>
+        
+        <!-- Why Choose Us Section -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-md-10">
+                <h2 class="text-center mb-5">Why Refspot?</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <div class="d-flex">
+                            <div class="me-4">
+                                <i data-feather="shield" class="text-success" style="width: 32px; height: 32px;"></i>
+                            </div>
+                            <div>
+                                <h5>Distraction-Free</h5>
+                                <p class="text-muted">No social media noise. Focus on what matters for your career.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="d-flex">
+                            <div class="me-4">
+                                <i data-feather="target" class="text-success" style="width: 32px; height: 32px;"></i>
+                            </div>
+                            <div>
+                                <h5>Purpose-Driven</h5>
+                                <p class="text-muted">Every feature is designed to advance your professional goals.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="d-flex">
+                            <div class="me-4">
+                                <i data-feather="trending-up" class="text-success" style="width: 32px; height: 32px;"></i>
+                            </div>
+                            <div>
+                                <h5>Career Growth</h5>
+                                <p class="text-muted">Tools and connections that actually help you grow professionally.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-4">
+                        <div class="d-flex">
+                            <div class="me-4">
+                                <i data-feather="check-circle" class="text-success" style="width: 32px; height: 32px;"></i>
+                            </div>
+                            <div>
+                                <h5>Quality Connections</h5>
+                                <p class="text-muted">Meaningful professional relationships, not just numbers.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

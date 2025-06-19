@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Send Connection Request{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-6 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h4>
+                        <i data-feather="user-plus" class="me-2"></i>
+                        Send Connection Request
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="profile-avatar me-3" style="width: 60px; height: 60px; font-size: 1.2rem;">
+                            {{ user.get_full_name()[0]|upper }}
+                        </div>
+                        <div>
+                            <h5 class="mb-1">{{ user.get_full_name() }}</h5>
+                            {% if user.headline %}
+                                <p class="text-muted mb-0">{{ user.headline }}</p>
+                            {% endif %}
+                            {% if user.current_company %}
+                                <small class="text-muted">{{ user.current_company }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.message.label(class="form-label") }}
+                            {{ form.message(class="form-control", rows="4", placeholder="Hi " + (user.first_name or user.username) + ", I'd like to connect with you...") }}
+                            <div class="form-text">
+                                Add a personal note to your connection request (optional)
+                            </div>
+                            {% if form.message.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {% for error in form.message.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{{ url_for('view_profile', username=user.username) }}" class="btn btn-outline-secondary me-md-2">
+                                Cancel
+                            </a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

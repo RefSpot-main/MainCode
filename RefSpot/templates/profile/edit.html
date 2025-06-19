@@ -1,0 +1,531 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Refspot{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i data-feather="edit" class="me-2"></i>
+                    Edit Profile
+                </h4>
+                <p class="text-muted mb-0">Update your professional information</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.first_name.label(class="form-label") }}
+                                {{ form.first_name(class="form-control") }}
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.first_name.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                {{ form.last_name.label(class="form-label") }}
+                                {{ form.last_name(class="form-control") }}
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger mt-1">
+                                        {% for error in form.last_name.errors %}
+                                            <small>{{ error }}</small>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.headline.label(class="form-label") }}
+                        {{ form.headline(class="form-control", data_max_length="200") }}
+                        <small class="form-text text-muted">A brief professional headline (e.g., "Senior Software Engineer at TechCorp")</small>
+                        {% if form.headline.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.headline.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.location.label(class="form-label") }}
+                        {{ form.location(class="form-control") }}
+                        <small class="form-text text-muted">City, State/Country</small>
+                        {% if form.location.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.location.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        {{ form.about.label(class="form-label") }}
+                        {{ form.about(class="form-control", rows="4") }}
+                        <small class="form-text text-muted">Tell others about your professional background and expertise</small>
+                        {% if form.about.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.about.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+
+                    
+                    <div class="form-group mb-4">
+                        <div class="form-check">
+                            {{ form.open_for_referrals(class="form-check-input") }}
+                            {{ form.open_for_referrals.label(class="form-check-label") }}
+                        </div>
+                        <small class="form-text text-muted">{{ form.open_for_referrals.description }}</small>
+                        {% if form.open_for_referrals.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in form.open_for_referrals.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-flex gap-3">
+                        {{ form.submit(class="btn btn-primary") }}
+                        <a href="{{ url_for('view_profile', username=current_user.username) }}" class="btn btn-secondary">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Experience Management Section -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i data-feather="briefcase" class="me-2"></i>
+                    Work Experience
+                </h5>
+                <a href="{{ url_for('add_experience') }}" class="btn btn-sm btn-primary">
+                    <i data-feather="plus" style="width: 14px; height: 14px;" class="me-1"></i>
+                    Add Experience
+                </a>
+            </div>
+            <div class="card-body">
+                {% if current_user.experiences %}
+                    {% for experience in current_user.experiences %}
+                        <div class="experience-edit-item {% if not loop.last %}border-bottom pb-3 mb-3{% endif %}">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="fw-bold">{{ experience.position }}</div>
+                                    <div class="text-primary mb-1">
+                                        <i data-feather="briefcase" style="width: 14px; height: 14px;" class="me-1"></i>
+                                        {{ experience.company }}
+                                        {% if experience.current %}
+                                            <span class="badge bg-success ms-2">Current</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-muted small">
+                                        <i data-feather="calendar" style="width: 14px; height: 14px;" class="me-1"></i>
+                                        {{ experience.start_date.strftime('%b %Y') if experience.start_date else 'Start Date' }} - 
+                                        {% if experience.current %}
+                                            Present
+                                        {% else %}
+                                            {{ experience.end_date.strftime('%b %Y') if experience.end_date else 'End Date' }}
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                        <i data-feather="more-vertical" style="width: 14px; height: 14px;"></i>
+                                    </button>
+                                    <ul class="dropdown-menu">
+                                        <li><a class="dropdown-item" href="{{ url_for('edit_experience', experience_id=experience.id) }}">
+                                            <i data-feather="edit-3" style="width: 14px; height: 14px;" class="me-2"></i>Edit
+                                        </a></li>
+                                        <li><a class="dropdown-item text-danger" href="{{ url_for('delete_experience', experience_id=experience.id) }}" 
+                                               onclick="return confirm('Are you sure you want to delete this experience?')">
+                                            <i data-feather="trash-2" style="width: 14px; height: 14px;" class="me-2"></i>Delete
+                                        </a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center text-muted">
+                        <div class="empty-icon bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 60px; height: 60px;">
+                            <i data-feather="briefcase" style="width: 24px; height: 24px;"></i>
+                        </div>
+                        <p class="mb-3">No work experience added yet</p>
+                        <a href="{{ url_for('add_experience') }}" class="btn btn-outline-primary">
+                            <i data-feather="plus" class="me-1"></i>
+                            Add Your First Experience
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Profile Photo Management -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="camera" class="me-2"></i>
+                    Profile Photo
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Current Photo Display -->
+                <div class="text-center mb-3">
+                    {% if current_user.profile_image %}
+                        <img src="{{ url_for('static', filename='uploads/profile_photos/' + current_user.profile_image) }}" 
+                             alt="Profile Photo" class="profile-photo-preview" style="width: 120px; height: 160px; object-fit: cover; border-radius: 8px;">
+                    {% else %}
+                        <div class="profile-photo-placeholder mx-auto d-flex align-items-center justify-content-center" 
+                             style="width: 120px; height: 160px; background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 8px;">
+                            <i data-feather="user" style="width: 50px; height: 50px;" class="text-muted"></i>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Upload Options -->
+                <div class="d-grid gap-2">
+                    <!-- File Upload -->
+                    <form method="POST" action="{{ url_for('upload_profile_photo') }}" enctype="multipart/form-data" class="d-inline">
+                        <div class="input-group">
+                            <input type="file" class="form-control form-control-sm" name="photo" accept="image/*" id="photoInput" required>
+                            <button type="submit" class="btn btn-sm btn-primary">
+                                <i data-feather="upload" style="width: 14px; height: 14px;"></i>
+                                Upload
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <!-- Camera Capture -->
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="openCamera()">
+                        <i data-feather="camera" class="me-1" style="width: 14px; height: 14px;"></i>
+                        Take Photo
+                    </button>
+                    
+                    <!-- Remove Photo -->
+                    {% if current_user.profile_image %}
+                        <form method="POST" action="{{ url_for('remove_profile_photo') }}" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-outline-danger w-100" onclick="return confirm('Are you sure you want to remove your profile photo?')">
+                                <i data-feather="trash-2" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Remove Photo
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Skills Management -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="zap" class="me-2"></i>
+                    Manage Skills
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Current Skills -->
+                {% if current_user.skills %}
+                    <div class="skills-list mb-3">
+                        {% for skill in current_user.skills %}
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                <div>
+                                    <span class="fw-medium">{{ skill.skill_name }}</span>
+                                    <small class="text-muted ms-2">({{ skill.proficiency }})</small>
+                                </div>
+                                <form method="POST" action="{{ url_for('delete_skill', skill_id=skill.id) }}" class="d-inline">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove skill">
+                                        <i data-feather="x" style="width: 14px; height: 14px;"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <!-- Add New Skill Form -->
+                <form method="POST" action="{{ url_for('add_skill') }}" class="border-top pt-3">
+                    <h6 class="mb-3">Add New Skill</h6>
+                    <div class="form-group mb-3">
+                        <label for="skill_name" class="form-label">Skill Name</label>
+                        <input type="text" class="form-control" name="skill_name" required placeholder="e.g., Python, Marketing, Leadership">
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="proficiency" class="form-label">Proficiency Level</label>
+                        <select class="form-control" name="proficiency">
+                            <option value="beginner">Beginner</option>
+                            <option value="intermediate" selected>Intermediate</option>
+                            <option value="advanced">Advanced</option>
+                            <option value="expert">Expert</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm btn-primary">
+                        <i data-feather="plus" class="me-1" style="width: 14px; height: 14px;"></i>
+                        Add Skill
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Resume Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="file-text" class="me-2"></i>
+                    Resume
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if current_user.resume_file %}
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div class="d-flex align-items-center">
+                            <i data-feather="file" class="text-success me-2"></i>
+                            <span>Resume uploaded</span>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('download_resume', filename=current_user.resume_file) }}" 
+                               class="btn btn-sm btn-outline-primary me-2">
+                                <i data-feather="download" class="me-1" style="width: 14px; height: 14px;"></i>
+                                Download
+                            </a>
+                            <form method="POST" action="{{ url_for('remove_resume') }}" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger"
+                                        onclick="return confirm('Are you sure you want to remove your resume?')">
+                                    <i data-feather="trash-2" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    Remove
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                {% endif %}
+                
+                {% set resume_form = ResumeUploadForm() %}
+                <form method="POST" action="{{ url_for('upload_resume') }}" enctype="multipart/form-data">
+                    {{ resume_form.hidden_tag() }}
+                    <div class="form-group mb-3">
+                        {{ resume_form.resume.label(class="form-label") }}
+                        {{ resume_form.resume(class="form-control", accept=".pdf") }}
+                        <div class="form-text">
+                            <i data-feather="info" class="me-1" style="width: 12px; height: 12px;"></i>
+                            Upload your resume to make it easier for recruiters and connections to learn about your background.
+                        </div>
+                        {% if resume_form.resume.errors %}
+                            <div class="text-danger mt-1">
+                                {% for error in resume_form.resume.errors %}
+                                    <small>{{ error }}</small>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    {{ resume_form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="info" class="me-2"></i>
+                    Profile Tips
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6 class="text-primary">Professional Headline</h6>
+                    <p class="small text-muted">Include your current role and company for better discoverability.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-primary">About Section</h6>
+                    <p class="small text-muted">Highlight your expertise, achievements, and what you're passionate about professionally.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <h6 class="text-primary">Job Status</h6>
+                    <p class="small text-muted">This helps others understand if you're open to new opportunities.</p>
+                </div>
+                
+                <div class="alert alert-info">
+                    <small>
+                        <i data-feather="info" class="me-1"></i>
+                        Complete profiles get 5x more connection requests!
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="eye" class="me-2"></i>
+                    Profile Visibility
+                </h6>
+            </div>
+            <div class="card-body">
+                <p class="small text-muted">Your profile is visible to:</p>
+                <ul class="small text-muted">
+                    <li>All registered users</li>
+                    <li>People searching for professionals</li>
+                    <li>Your connections and their networks</li>
+                </ul>
+                <p class="small text-muted">Contact information is only visible to your connections.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Camera Modal -->
+<div class="modal fade" id="cameraModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Take Profile Photo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center">
+                    <video id="camera" width="400" height="300" autoplay style="border-radius: 8px;"></video>
+                    <div id="capturedPhoto" style="display: none;">
+                        <img id="photoPreview" width="400" height="300" style="border-radius: 8px;">
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="button" id="captureBtn" class="btn btn-primary me-2">
+                        <i data-feather="camera"></i>
+                        Capture Photo
+                    </button>
+                    <button type="button" id="retakeBtn" class="btn btn-secondary me-2" style="display: none;">
+                        <i data-feather="refresh-cw"></i>
+                        Retake
+                    </button>
+                    <button type="button" id="savePhotoBtn" class="btn btn-success" style="display: none;">
+                        <i data-feather="check"></i>
+                        Save Photo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let cameraStream = null;
+let capturedBlob = null;
+
+function openCamera() {
+    const modal = new bootstrap.Modal(document.getElementById('cameraModal'));
+    const video = document.getElementById('camera');
+    const capturedDiv = document.getElementById('capturedPhoto');
+    const captureBtn = document.getElementById('captureBtn');
+    const retakeBtn = document.getElementById('retakeBtn');
+    const saveBtn = document.getElementById('savePhotoBtn');
+    
+    // Reset UI
+    video.style.display = 'block';
+    capturedDiv.style.display = 'none';
+    captureBtn.style.display = 'inline-block';
+    retakeBtn.style.display = 'none';
+    saveBtn.style.display = 'none';
+    
+    // Request camera access
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            cameraStream = stream;
+            video.srcObject = stream;
+            modal.show();
+        })
+        .catch(err => {
+            alert('Camera access denied or not available');
+            console.error('Camera error:', err);
+        });
+}
+
+document.getElementById('captureBtn').addEventListener('click', function() {
+    const video = document.getElementById('camera');
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0);
+    
+    // Convert to blob
+    canvas.toBlob(blob => {
+        capturedBlob = blob;
+        
+        // Show preview
+        const preview = document.getElementById('photoPreview');
+        preview.src = URL.createObjectURL(blob);
+        
+        // Update UI
+        video.style.display = 'none';
+        document.getElementById('capturedPhoto').style.display = 'block';
+        document.getElementById('captureBtn').style.display = 'none';
+        document.getElementById('retakeBtn').style.display = 'inline-block';
+        document.getElementById('savePhotoBtn').style.display = 'inline-block';
+        
+        // Stop camera
+        if (cameraStream) {
+            cameraStream.getTracks().forEach(track => track.stop());
+        }
+    }, 'image/jpeg', 0.8);
+});
+
+document.getElementById('retakeBtn').addEventListener('click', function() {
+    openCamera();
+});
+
+document.getElementById('savePhotoBtn').addEventListener('click', function() {
+    if (capturedBlob) {
+        const formData = new FormData();
+        formData.append('photo', capturedBlob, 'camera-photo.jpg');
+        
+        fetch('{{ url_for("upload_camera_photo") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Error saving photo');
+            }
+        })
+        .catch(err => {
+            alert('Error saving photo');
+            console.error('Upload error:', err);
+        });
+    }
+});
+
+// Clean up camera when modal is closed
+document.getElementById('cameraModal').addEventListener('hidden.bs.modal', function() {
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+});
+</script>
+
+{% endblock %}

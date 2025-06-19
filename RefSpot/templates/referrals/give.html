@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Give Referral{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i data-feather="users" style="width: 20px; height: 20px;" class="me-2"></i>
+                        Give Referral to {{ user.get_full_name() or user.username }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                        {% if user.profile_image %}
+                            <img src="{{ url_for('static', filename='uploads/profile_photos/' + user.profile_image) }}" 
+                                 alt="Profile" class="rounded-circle me-3" style="width: 60px; height: 60px; object-fit: cover;">
+                        {% else %}
+                            <div class="profile-avatar me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                {{ (user.get_full_name() or user.username)[0]|upper }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h5 class="mb-1">{{ user.get_full_name() or user.username }}</h5>
+                            {% if user.headline %}
+                                <p class="text-muted mb-1">{{ user.headline }}</p>
+                            {% endif %}
+                            {% if user.current_company %}
+                                <small class="text-muted">
+                                    <i data-feather="briefcase" style="width: 12px; height: 12px;" class="me-1"></i>
+                                    {{ user.current_company }}
+                                </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.company.label(class="form-label") }}
+                            {{ form.company(class="form-control", placeholder="Company name") }}
+                            {% if form.company.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.company.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.role_title.label(class="form-label") }}
+                            {{ form.role_title(class="form-control", placeholder="Job title or position") }}
+                            {% if form.role_title.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.role_title.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.role_description.label(class="form-label") }}
+                            {{ form.role_description(class="form-control", rows="3", placeholder="Brief description of the role...") }}
+                            {% if form.role_description.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.role_description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.recommendation_text.label(class="form-label") }}
+                            {{ form.recommendation_text(class="form-control", rows="4", placeholder="Why do you recommend this person? Highlight their skills and experience...") }}
+                            {% if form.recommendation_text.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.recommendation_text.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.hr_contact.label(class="form-label") }}
+                            {{ form.hr_contact(class="form-control", placeholder="HR email or contact information (optional)") }}
+                            <small class="form-text text-muted">Provide HR contact details if available</small>
+                            {% if form.hr_contact.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.hr_contact.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mb-4">
+                            {{ form.application_link.label(class="form-label") }}
+                            {{ form.application_link(class="form-control", placeholder="Direct application link (optional)") }}
+                            <small class="form-text text-muted">Link to job posting or application portal</small>
+                            {% if form.application_link.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.application_link.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            {{ form.submit(class="btn btn-primary") }}
+                            <a href="{{ url_for('referrals') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    feather.replace();
+});
+</script>
+{% endblock %}

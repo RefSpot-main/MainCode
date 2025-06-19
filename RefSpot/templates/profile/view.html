@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.get_full_name() }} - Refspot{% endblock %}
+
+{% block content %}
+<!-- Profile Header -->
+<div class="profile-header">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-3 text-center">
+                <div class="profile-avatar">
+                    {% if user.profile_image %}
+                        <img src="{{ url_for('static', filename='uploads/profile_photos/' + user.profile_image) }}" 
+                             alt="{{ user.get_full_name() or user.username }}" 
+                             class="profile-photo" 
+                             style="width: 120px; height: 160px; object-fit: cover; border-radius: 8px;">
+                    {% else %}
+                        <div class="avatar-placeholder d-flex align-items-center justify-content-center" 
+                             style="width: 120px; height: 160px; border-radius: 8px; background-color: #404658; color: white; font-size: 48px; font-weight: bold;">
+                            {{ user.get_full_name()[0]|upper if user.get_full_name() else user.username[0]|upper }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="profile-info">
+                    <h1>{{ user.get_full_name() }}</h1>
+                    {% if user.headline %}
+                        <div class="profile-headline">{{ user.headline }}</div>
+                    {% endif %}
+                    <div class="profile-meta">
+                        {% if user.current_company and user.current_position %}
+                            <span>
+                                <i data-feather="briefcase" class="me-1"></i>
+                                {{ user.current_position }} at {{ user.current_company }}
+                            </span>
+                        {% endif %}
+                        {% if user.location %}
+                            <span>
+                                <i data-feather="map-pin" class="me-1"></i>
+                                {{ user.location }}
+                            </span>
+                        {% endif %}
+                        {% if user.job_status %}
+                            <span class="status-indicator status-{{ user.job_status }}">
+                                {% if user.job_status == 'seeking' %}
+                                    <i data-feather="search"></i>
+                                    Actively Seeking
+                                {% elif user.job_status == 'open' %}
+                                    <i data-feather="eye"></i>
+                                    Open to Opportunities
+                                {% else %}
+                                    <i data-feather="briefcase"></i>
+                                    Employed
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                        {% if user.open_for_referrals %}
+                            <span class="status-indicator status-referrals ms-2">
+                                <i data-feather="users"></i>
+                                Open for Referrals
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 text-center">
+                {% if not is_own_profile %}
+                    {% if is_connected %}
+                        <button class="btn btn-success mb-2" disabled>
+                            <i data-feather="check-circle" class="me-1"></i>
+                            Connected
+                        </button>
+                        <br>
+                        <a href="{{ url_for('conversation', username=user.username) }}" class="btn btn-outline-light">
+                            <i data-feather="message-square" class="me-1"></i>
+                            Send Message
+                        </a>
+                    {% elif has_pending_request %}
+                        <button class="btn btn-secondary" disabled>
+                            <i data-feather="clock" class="me-1"></i>
+                            Request Pending
+                        </button>
+                        <br>
+                        <a href="{{ url_for('conversation', username=user.username) }}" class="btn btn-outline-light mt-2">
+                            <i data-feather="message-square" class="me-1"></i>
+                            Send Message
+                        </a>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('send_connection_request', username=user.username) }}" class="d-inline">
+                            <button type="submit" class="btn btn-primary mb-2">
+                                <i data-feather="plus-circle" class="me-1"></i>
+                                Connect
+                            </button>
+                        </form>
+                        <br>
+                        <a href="{{ url_for('conversation', username=user.username) }}" class="btn btn-outline-light mt-2">
+                            <i data-feather="message-square" class="me-1"></i>
+                            Send Message
+                        </a>
+                    {% endif %}
+                    
+                    {% if is_connected %}
+                        <br>
+                        <div class="d-flex gap-2 mt-2 flex-wrap justify-content-center">
+                            <a href="{{ url_for('give_referral', username=user.username) }}" class="btn btn-outline-light">
+                                <i data-feather="award" class="me-1"></i>
+                                Give Referral
+                            </a>
+                            {% if user.open_for_referrals %}
+                                <a href="{{ url_for('request_referral_from_user', username=user.username) }}" class="btn btn-outline-light">
+                                    <i data-feather="help-circle" class="me-1"></i>
+                                    Ask for Referral
+                                </a>
+                            {% else %}
+                                <button class="btn btn-outline-light" disabled title="Not accepting referral requests">
+                                    <i data-feather="help-circle" class="me-1"></i>
+                                    Ask for Referral
+                                </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <a href="{{ url_for('edit_profile') }}" class="btn btn-light">
+                        <i data-feather="edit-3" class="me-1"></i>
+                        Edit Profile
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <!-- About Section -->
+        {% if user.about %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="user" class="me-2"></i>
+                        About
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ user.about }}</p>
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Experience Section -->
+        <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i data-feather="briefcase" class="me-2"></i>
+                        Work Experience
+                    </h5>
+                    {% if is_own_profile %}
+                        <a href="{{ url_for('add_experience') }}" class="btn btn-sm btn-outline-primary">
+                            <i data-feather="plus" style="width: 14px; height: 14px;" class="me-1"></i>
+                            Add Experience
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if experiences %}
+                        {% set companies = {} %}
+                        {% for experience in experiences %}
+                            {% if experience.company not in companies %}
+                                {% set _ = companies.update({experience.company: []}) %}
+                            {% endif %}
+                            {% set _ = companies[experience.company].append(experience) %}
+                        {% endfor %}
+                        
+                        <div class="experience-tree">
+                        {% for company, company_experiences in companies.items() %}
+                            <div class="company-group {% if not loop.last %}mb-4{% endif %}">
+                                <!-- Company Header -->
+                                <div class="company-header d-flex align-items-center mb-3">
+                                    <div class="company-icon me-3" style="width: 50px; height: 50px;">
+                                        {% set first_experience = company_experiences[0] %}
+                                        {% if first_experience.company_logo %}
+                                            <img src="{{ url_for('static', filename='uploads/company_logos/' + first_experience.company_logo) }}" 
+                                                 alt="{{ company }} logo" 
+                                                 style="width: 100%; height: 100%; object-fit: contain;">
+                                        {% else %}
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 100%; height: 100%; font-size: 1.2rem; font-weight: bold;">
+                                                {{ company[0]|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="company-name mb-0 fw-bold">{{ company }}</h6>
+                                        <small class="text-muted">
+                                            {% set sorted_experiences = company_experiences|sort(attribute='start_date', reverse=false) %}
+                                            {% set earliest = sorted_experiences[0] %}
+                                            {% set latest = sorted_experiences[-1] %}
+                                            {% set total_time_start = earliest.start_date if earliest.start_date else none %}
+                                            {% set total_time_end = latest.end_date if latest.end_date and not latest.current else none %}
+                                            
+                                            {% if total_time_start %}
+                                                {{ total_time_start.strftime('%B %Y') }} - 
+                                                {% if latest.current %}
+                                                    Present
+                                                {% elif total_time_end %}
+                                                    {{ total_time_end.strftime('%B %Y') }}
+                                                {% else %}
+                                                    Present
+                                                {% endif %}
+                                                
+                                                {% if company_experiences|length > 1 %}
+                                                    • {{ company_experiences|length }} positions
+                                                {% endif %}
+                                            {% endif %}
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <!-- Experience Timeline -->
+                                <div class="experience-timeline ms-5">
+                                    {% for experience in company_experiences|sort(attribute='start_date', reverse=true) %}
+                                        <div class="timeline-item position-relative {% if not loop.last %}mb-3{% endif %}">
+                                            <!-- Timeline connector -->
+                                            {% if not loop.last %}
+                                                <div class="timeline-connector position-absolute bg-secondary" style="left: 8px; top: 35px; width: 2px; height: calc(100% + 12px);"></div>
+                                            {% endif %}
+                                            
+                                            <!-- Timeline dot -->
+                                            <div class="timeline-dot position-absolute bg-primary rounded-circle border border-white" style="left: 4px; top: 8px; width: 12px; height: 12px; box-shadow: 0 0 0 3px white;"></div>
+                                            
+                                            <!-- Experience content -->
+                                            <div class="timeline-content ms-4">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex align-items-center mb-1">
+                                                            <div class="position-title fw-semibold me-2">{{ experience.position }}</div>
+                                                            {% if experience.employment_type %}
+                                                                {% set type_colors = {
+                                                                    'full-time': 'primary',
+                                                                    'part-time': 'info', 
+                                                                    'intern': 'warning',
+                                                                    'contract': 'secondary'
+                                                                } %}
+                                                                <span class="badge bg-{{ type_colors.get(experience.employment_type, 'secondary') }} text-capitalize">
+                                                                    {{ experience.employment_type.replace('-', ' ') }}
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                        <div class="position-duration text-muted small mb-2">
+                                                            <i data-feather="calendar" style="width: 12px; height: 12px;" class="me-1"></i>
+                                                            {{ experience.start_date.strftime('%b %Y') if experience.start_date else 'Start Date' }} - 
+                                                            {% if experience.current %}
+                                                                <span class="text-success fw-semibold">Present</span>
+                                                            {% else %}
+                                                                {{ experience.end_date.strftime('%b %Y') if experience.end_date else 'End Date' }}
+                                                            {% endif %}
+                                                            
+                                                            {% if experience.location %}
+                                                                <span class="ms-2">
+                                                                    <i data-feather="map-pin" style="width: 12px; height: 12px;" class="me-1"></i>
+                                                                    {{ experience.location }}
+                                                                </span>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% if experience.description %}
+                                                            <div class="position-description text-muted small">{{ experience.description }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if is_own_profile %}
+                                                        <div class="d-flex gap-1">
+                                                            <a href="{{ url_for('edit_experience', experience_id=experience.id) }}" 
+                                                               class="btn btn-sm btn-outline-primary" 
+                                                               title="Edit Experience">
+                                                                <i data-feather="edit-3" style="width: 12px; height: 12px;"></i>
+                                                            </a>
+                                                            <a href="{{ url_for('delete_experience', experience_id=experience.id) }}" 
+                                                               class="btn btn-sm btn-outline-danger" 
+                                                               title="Delete Experience"
+                                                               onclick="return confirm('Are you sure you want to delete this experience?')">
+                                                                <i data-feather="trash-2" style="width: 12px; height: 12px;"></i>
+                                                            </a>
+                                                        </div>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                {% else %}
+                    <div class="experience-empty-state">
+                        <div class="empty-icon">
+                            <i data-feather="briefcase" style="width: 24px; height: 24px;" class="text-muted"></i>
+                        </div>
+                        <p class="mb-3">No work experience added yet</p>
+                        {% if is_own_profile %}
+                            <a href="{{ url_for('add_experience') }}" class="btn btn-outline-primary">
+                                <i data-feather="plus" class="me-1"></i>
+                                Add Your First Experience
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Education Section -->
+        {% if educations %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="book" class="me-2"></i>
+                        Education
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for education in educations %}
+                        <div class="education-item">
+                            <div class="education-title">
+                                {% if education.degree %}
+                                    {{ education.degree }}
+                                    {% if education.field_of_study %}
+                                        in {{ education.field_of_study }}
+                                    {% endif %}
+                                {% else %}
+                                    {{ education.field_of_study or 'Education' }}
+                                {% endif %}
+                            </div>
+                            <div class="education-institution">{{ education.institution }}</div>
+                            <div class="education-duration">
+                                {% if education.start_year %}
+                                    {{ education.start_year }} - 
+                                    {% if education.current %}
+                                        Present
+                                    {% else %}
+                                        {{ education.end_year or 'End Year' }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+        
+        <!-- Recommendations Section -->
+        {% if recommendations %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i data-feather="award" class="me-2"></i>
+                        Recommendations ({{ recommendations|length }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% for recommendation in recommendations %}
+                        <div class="recommendation-item">
+                            <div class="recommendation-header">
+                                <div class="recommendation-author">
+                                    <div class="recommendation-author-name">
+                                        <a href="{{ url_for('view_profile', username=recommendation.recommender.username) }}" class="text-decoration-none">
+                                            {{ recommendation.recommender.get_full_name() }}
+                                        </a>
+                                    </div>
+                                    <div class="recommendation-relationship">
+                                        {{ recommendation.relationship|title }} • {{ recommendation.created_at.strftime('%B %d, %Y') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="recommendation-content">
+                                {{ recommendation.content }}
+                            </div>
+                            {% if recommendation.get_skills_list() %}
+                                <div class="recommendation-skills">
+                                    {% for skill in recommendation.get_skills_list() %}
+                                        <span class="recommendation-skill">{{ skill }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="col-md-4">
+        <!-- Resume Section -->
+        {% if user.resume_file %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i data-feather="file-text" class="me-2"></i>
+                        Resume
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center">
+                            <i data-feather="file" class="text-success me-2"></i>
+                            <span>Resume available</span>
+                        </div>
+                        <a href="{{ url_for('download_resume', filename=user.resume_file) }}" 
+                           class="btn btn-sm btn-primary">
+                            <i data-feather="download" class="me-1" style="width: 14px; height: 14px;"></i>
+                            Download
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Skills Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="zap" class="me-2"></i>
+                    Skills
+                </h6>
+            </div>
+            <div class="card-body">
+                {% if skills %}
+                    <div class="skills-list">
+                        {% for skill in skills %}
+                            <span class="skill-tag">
+                                {{ skill.skill_name }}
+                                <span class="skill-proficiency">({{ skill.proficiency }})</span>
+                            </span>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No skills listed yet.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Connection Info -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i data-feather="users" class="me-2"></i>
+                    Network
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Connections</span>
+                    <span class="fw-bold">
+                        {{ user.sent_connections.filter_by(status='accepted').count() + user.received_connections.filter_by(status='accepted').count() }}
+                    </span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Job Referrals</span>
+                    <span class="fw-bold">{{ referrals|length }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Info -->
+        {% if is_connected or is_own_profile %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i data-feather="mail" class="me-2"></i>
+                        Contact
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <i data-feather="mail" class="me-2"></i>
+                        {{ user.email }}
+                    </div>
+                    {% if user.location %}
+                        <div class="mb-2">
+                            <i data-feather="map-pin" class="me-2"></i>
+                            {{ user.location }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+
+{% endblock %}

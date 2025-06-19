@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Connections - Refspot{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i data-feather="users" class="me-2"></i>
+                Your Connections
+            </h2>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('connection_requests') }}" class="btn btn-outline-primary">
+                    <i data-feather="user-plus" class="me-1"></i>
+                    Requests
+                    {% set pending_count = current_user.received_connections.filter_by(status='pending').count() %}
+                    {% if pending_count > 0 %}
+                        <span class="badge bg-warning ms-1">{{ pending_count }}</span>
+                    {% endif %}
+                </a>
+                <a href="{{ url_for('search') }}" class="btn btn-primary">
+                    <i data-feather="search" class="me-1"></i>
+                    Find People
+                </a>
+            </div>
+        </div>
+        
+        {% if connected_users %}
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0">{{ connected_users|length }} Connection{{ 's' if connected_users|length != 1 else '' }}</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row animate-list">
+                                {% for user in connected_users %}
+                                    <div class="col-md-6 col-lg-4 mb-4">
+                                        <div class="card h-100 shadow-sm">
+                                            <div class="card-body text-center">
+                                                {% if user.profile_image %}
+                                                    <img src="{{ url_for('static', filename='uploads/profile_photos/' + user.profile_image) }}" 
+                                                         alt="Profile" class="rounded-circle mx-auto mb-3" style="width: 80px; height: 80px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="profile-avatar mx-auto mb-3" style="width: 80px; height: 80px; font-size: 1.5rem;">
+                                                        {{ user.get_full_name()[0]|upper }}
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <h6 class="card-title">
+                                                    <a href="{{ url_for('view_profile', username=user.username) }}" class="text-decoration-none">
+                                                        {{ user.get_full_name() }}
+                                                    </a>
+                                                </h6>
+                                                
+                                                {% if user.headline %}
+                                                    <p class="card-text text-muted small mb-2">{{ user.headline[:80] }}{% if user.headline|length > 80 %}...{% endif %}</p>
+                                                {% endif %}
+                                                
+                                                {% if user.current_company %}
+                                                    <p class="card-text small">
+                                                        <i data-feather="briefcase" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        {{ user.current_company }}
+                                                    </p>
+                                                {% endif %}
+                                                
+                                                {% if user.location %}
+                                                    <p class="card-text small text-muted">
+                                                        <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        {{ user.location }}
+                                                    </p>
+                                                {% endif %}
+                                                
+                                                {% if user.job_status %}
+                                                    <div class="mb-3">
+                                                        <span class="status-indicator status-{{ user.job_status }}">
+                                                            {% if user.job_status == 'seeking' %}
+                                                                <i data-feather="search" style="width: 12px; height: 12px;"></i>
+                                                                Seeking
+                                                            {% elif user.job_status == 'open' %}
+                                                                <i data-feather="eye" style="width: 12px; height: 12px;"></i>
+                                                                Open
+                                                            {% else %}
+                                                                <i data-feather="briefcase" style="width: 12px; height: 12px;"></i>
+                                                                Employed
+                                                            {% endif %}
+                                                        </span>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                <div class="d-flex gap-2 justify-content-center">
+                                                    <a href="{{ url_for('view_profile', username=user.username) }}" class="btn btn-sm btn-outline-primary">
+                                                        <i data-feather="file-text" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        View
+                                                    </a>
+                                                    <a href="{{ url_for('conversation', username=user.username) }}" class="btn btn-sm btn-primary">
+                                                        <i data-feather="message-square" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        Message
+                                                    </a>
+                                                </div>
+                                                <div class="mt-2">
+                                                    <button class="btn btn-sm btn-outline-danger" onclick="confirmRemoveConnection('{{ user.username }}', '{{ user.get_full_name() }}')">
+                                                        <i data-feather="x-circle" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i data-feather="link" style="width: 64px; height: 64px;" class="text-muted"></i>
+                </div>
+                <h4 class="text-muted">No Connections Yet</h4>
+                <p class="text-muted mb-4">Start building your professional network by connecting with colleagues and industry professionals.</p>
+                <div class="d-flex gap-3 justify-content-center">
+                    <a href="{{ url_for('search') }}" class="btn btn-primary">
+                        <i data-feather="search" class="me-1"></i>
+                        Find People to Connect
+                    </a>
+                    <a href="{{ url_for('connection_requests') }}" class="btn btn-outline-primary">
+                        <i data-feather="plus-circle" class="me-1"></i>
+                        Check Requests
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Remove Connection Modal -->
+<div class="modal fade" id="removeConnectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Remove Connection</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to remove <strong id="connectionName"></strong> from your connections?</p>
+                <p class="text-muted small">This action cannot be undone. You'll need to send a new connection request to connect again.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="removeConnectionForm" method="POST" class="d-inline">
+                    <button type="submit" class="btn btn-danger">Remove Connection</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmRemoveConnection(username, fullName) {
+    document.getElementById('connectionName').textContent = fullName;
+    
+    // We need to find the connection ID for this user
+    // For now, let's use a simpler approach - redirect to a confirmation page
+    if (confirm(`Are you sure you want to remove ${fullName} from your connections? This cannot be undone.`)) {
+        // Create a form to submit the removal request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/connections/remove/' + username;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs - Refspot{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i data-feather="briefcase" class="me-2"></i>
+                Job Opportunities
+            </h2>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                <i data-feather="plus" class="me-1"></i>
+                Post a Job
+            </button>
+        </div>
+        
+        <!-- Search Filters -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-5">
+                        <input type="text" class="form-control" name="search" 
+                               placeholder="Search jobs by title, company, or keywords..." 
+                               value="{{ search_query }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="text" class="form-control" name="location" 
+                               placeholder="Location" 
+                               value="{{ location_filter }}">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i data-feather="search" class="me-1"></i>
+                            Search
+                        </button>
+                    </div>
+                    <div class="col-md-2">
+                        <a href="{{ url_for('jobs') }}" class="btn btn-outline-secondary w-100">
+                            <i data-feather="x" class="me-1"></i>
+                            Clear
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Job Listings -->
+        {% if jobs %}
+            <div class="row">
+                {% for job in jobs %}
+                    <div class="col-md-12 mb-3">
+                        <div class="job-item">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="job-title">{{ job.title }}</div>
+                                    <div class="job-company">{{ job.company }}</div>
+                                    <div class="job-meta">
+                                        {% if job.location %}
+                                            <span>
+                                                <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                {{ job.location }}
+                                            </span>
+                                        {% endif %}
+                                        <span>
+                                            <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                            {{ job.employment_type|title }}
+                                        </span>
+                                        {% if job.salary_range %}
+                                            <span>
+                                                <i data-feather="dollar-sign" class="me-1" style="width: 14px; height: 14px;"></i>
+                                                {{ job.salary_range }}
+                                            </span>
+                                        {% endif %}
+                                        <span>
+                                            <i data-feather="calendar" class="me-1" style="width: 14px; height: 14px;"></i>
+                                            Posted {{ job.created_at.strftime('%B %d, %Y') }}
+                                        </span>
+                                    </div>
+                                    <div class="job-description">
+                                        {{ job.description[:300] }}{% if job.description|length > 300 %}...{% endif %}
+                                    </div>
+                                    {% if job.requirements %}
+                                        <div class="mt-2">
+                                            <strong class="small text-muted">Key Requirements:</strong>
+                                            <div class="small text-muted">
+                                                {{ job.requirements[:200] }}{% if job.requirements|length > 200 %}...{% endif %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="ms-4">
+                                    <button type="button" class="btn btn-primary" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#jobModal{{ job.id }}">
+                                        <i data-feather="eye" class="me-1"></i>
+                                        View Details
+                                    </button>
+                                    {% if job.posted_by %}
+                                        <div class="mt-2 text-center">
+                                            <small class="text-muted">Posted by</small><br>
+                                            <a href="{{ url_for('view_profile', username=job.posted_by.username) }}" 
+                                               class="text-decoration-none small">
+                                                {{ job.posted_by.get_full_name() }}
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i data-feather="briefcase" style="width: 64px; height: 64px;" class="text-muted"></i>
+                </div>
+                <h4 class="text-muted">
+                    {% if search_query or location_filter %}
+                        No Jobs Found
+                    {% else %}
+                        No Job Postings Yet
+                    {% endif %}
+                </h4>
+                <p class="text-muted mb-4">
+                    {% if search_query or location_filter %}
+                        Try adjusting your search criteria or check back later for new opportunities.
+                    {% else %}
+                        Be the first to post a job opportunity for the community.
+                    {% endif %}
+                </p>
+                <div class="d-flex gap-3 justify-content-center">
+                    {% if search_query or location_filter %}
+                        <a href="{{ url_for('jobs') }}" class="btn btn-primary">
+                            <i data-feather="refresh-cw" class="me-1"></i>
+                            View All Jobs
+                        </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#postJobModal">
+                        <i data-feather="plus" class="me-1"></i>
+                        Post a Job
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Job Detail Modals -->
+{% for job in jobs %}
+    <div class="modal fade" id="jobModal{{ job.id }}" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">{{ job.title }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <h6 class="text-primary">{{ job.company }}</h6>
+                        <div class="job-meta">
+                            {% if job.location %}
+                                <span>
+                                    <i data-feather="map-pin" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    {{ job.location }}
+                                </span>
+                            {% endif %}
+                            <span>
+                                <i data-feather="clock" class="me-1" style="width: 14px; height: 14px;"></i>
+                                {{ job.employment_type|title }}
+                            </span>
+                            {% if job.salary_range %}
+                                <span>
+                                    <i data-feather="dollar-sign" class="me-1" style="width: 14px; height: 14px;"></i>
+                                    {{ job.salary_range }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6>Job Description</h6>
+                        <p>{{ job.description }}</p>
+                    </div>
+                    
+                    {% if job.requirements %}
+                        <div class="mb-3">
+                            <h6>Requirements</h6>
+                            <p>{{ job.requirements }}</p>
+                        </div>
+                    {% endif %}
+                    
+                    {% if job.posted_by %}
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <div class="profile-avatar me-3" style="width: 40px; height: 40px; font-size: 1rem;">
+                                    {{ job.posted_by.get_full_name()[0]|upper }}
+                                </div>
+                                <div>
+                                    <strong>Posted by {{ job.posted_by.get_full_name() }}</strong><br>
+                                    <small class="text-muted">
+                                        {{ job.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                                        {% if current_user.is_connected_to(job.posted_by) %}
+                                            • You're connected
+                                        {% endif %}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    {% if job.posted_by and current_user.is_connected_to(job.posted_by) %}
+                        <a href="{{ url_for('conversation', username=job.posted_by.username) }}" class="btn btn-primary">
+                            <i data-feather="message-circle" class="me-1"></i>
+                            Contact Poster
+                        </a>
+                    {% elif job.posted_by and not current_user.is_connected_to(job.posted_by) %}
+                        <a href="{{ url_for('send_connection_request', username=job.posted_by.username) }}" class="btn btn-outline-primary">
+                            <i data-feather="user-plus" class="me-1"></i>
+                            Connect First
+                        </a>
+                    {% endif %}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+
+<!-- Post Job Modal -->
+<div class="modal fade" id="postJobModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Post a Job</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('post_job') }}">
+                <div class="modal-body">
+                    <div class="form-group mb-3">
+                        <label for="title" class="form-label">Job Title *</label>
+                        <input type="text" class="form-control" name="title" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="company" class="form-label">Company *</label>
+                                <input type="text" class="form-control" name="company" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="location" class="form-label">Location</label>
+                                <input type="text" class="form-control" name="location" placeholder="e.g., New York, NY or Remote">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="employment_type" class="form-label">Employment Type</label>
+                                <select class="form-control" name="employment_type">
+                                    <option value="full-time">Full-time</option>
+                                    <option value="part-time">Part-time</option>
+                                    <option value="contract">Contract</option>
+                                    <option value="freelance">Freelance</option>
+                                    <option value="internship">Internship</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label for="salary_range" class="form-label">Salary Range</label>
+                                <input type="text" class="form-control" name="salary_range" placeholder="e.g., $80,000 - $120,000">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="description" class="form-label">Job Description *</label>
+                        <textarea class="form-control" name="description" rows="4" required placeholder="Describe the role, responsibilities, and what you're looking for..."></textarea>
+                    </div>
+                    
+                    <div class="form-group mb-3">
+                        <label for="requirements" class="form-label">Requirements</label>
+                        <textarea class="form-control" name="requirements" rows="3" placeholder="List the key qualifications, skills, and experience required..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Post Job</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
